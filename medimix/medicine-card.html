@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Medicine Info — mediQ</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#0d1117;
+  --ink2:#1c2333;
+  --ink3:#30363d;
+  --muted:#6e7681;
+  --border:#21262d;
+  --blue:#2f81f7;
+  --blue-dim:#1f3a5f;
+  --green:#3fb950;
+  --green-dim:#1a3a2a;
+  --red:#f85149;
+  --red-dim:#3d1a1a;
+  --yellow:#d29922;
+  --yellow-dim:#3d2e0a;
+  --surface:#161b22;
+  --surface2:#21262d;
+  --surface3:#2d333b;
+  --radius:12px;
+  --glow-blue:0 0 40px rgba(47,129,247,.15);
+}
+html{background:var(--ink);min-height:100vh}
+body{
+  font-family:'Outfit',sans-serif;
+  background:var(--ink);
+  color:#e6edf3;
+  min-height:100vh;
+  padding:0;
+  overflow-x:hidden;
+}
+
+/* ── Background grid ── */
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(47,129,247,.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(47,129,247,.04) 1px,transparent 1px);
+  background-size:40px 40px;
+  pointer-events:none;
+  z-index:0;
+}
+
+/* ── Glow orbs ── */
+.orb{position:fixed;border-radius:50%;filter:blur(80px);pointer-events:none;z-index:0;}
+.orb1{width:400px;height:400px;background:rgba(47,129,247,.08);top:-100px;right:-100px;}
+.orb2{width:300px;height:300px;background:rgba(63,185,80,.06);bottom:-80px;left:-80px;}
+
+/* ── Wrapper ── */
+.wrapper{
+  position:relative;z-index:1;
+  max-width:600px;margin:0 auto;
+  padding:32px 20px 60px;
+}
+
+/* ── Header bar ── */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:32px;
+}
+.brand{display:flex;align-items:center;gap:10px;}
+.brand-icon{
+  width:36px;height:36px;border-radius:9px;
+  background:var(--blue);
+  display:flex;align-items:center;justify-content:center;
+}
+.brand-name{font-size:20px;font-weight:800;letter-spacing:-.5px;color:#e6edf3;}
+.brand-tag{
+  font-size:11px;font-weight:500;
+  background:var(--surface2);border:1px solid var(--border);
+  color:var(--muted);padding:3px 9px;border-radius:20px;
+  font-family:'JetBrains Mono',monospace;
+}
+
+/* ── Hero card ── */
+.hero{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:20px;
+  overflow:hidden;
+  box-shadow:var(--glow-blue), 0 24px 48px rgba(0,0,0,.4);
+  margin-bottom:16px;
+  animation:slideUp .5s cubic-bezier(.16,1,.3,1) both;
+}
+@keyframes slideUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+
+/* Hero top band */
+.hero-head{
+  padding:28px 28px 24px;
+  background:linear-gradient(135deg,var(--surface2) 0%,var(--ink2) 100%);
+  border-bottom:1px solid var(--border);
+  position:relative;overflow:hidden;
+}
+.hero-head::after{
+  content:'';position:absolute;top:-30px;right:-30px;
+  width:160px;height:160px;border-radius:50%;
+  background:radial-gradient(circle,rgba(47,129,247,.12) 0%,transparent 70%);
+}
+.med-id{
+  font-family:'JetBrains Mono',monospace;
+  font-size:12px;font-weight:600;
+  color:var(--blue);letter-spacing:1.5px;
+  background:rgba(47,129,247,.1);border:1px solid rgba(47,129,247,.2);
+  display:inline-block;padding:4px 10px;border-radius:6px;
+  margin-bottom:10px;
+}
+.med-name{
+  font-size:26px;font-weight:800;
+  line-height:1.2;color:#e6edf3;
+  margin-bottom:8px;
+}
+.med-category{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:13px;font-weight:500;color:var(--muted);
+}
+.cat-dot{width:6px;height:6px;border-radius:50%;background:var(--blue);}
+
+/* Status badges row */
+.status-row{
+  display:flex;flex-wrap:wrap;gap:8px;
+  padding:16px 28px;
+  border-bottom:1px solid var(--border);
+  background:var(--ink2);
+}
+.status-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:5px 12px;border-radius:20px;
+  font-size:12px;font-weight:700;letter-spacing:.3px;
+  font-family:'JetBrains Mono',monospace;
+}
+.badge-ok{background:var(--green-dim);color:var(--green);border:1px solid rgba(63,185,80,.25);}
+.badge-expired{background:var(--red-dim);color:var(--red);border:1px solid rgba(248,81,73,.25);}
+.badge-expiring{background:var(--yellow-dim);color:var(--yellow);border:1px solid rgba(210,153,34,.25);}
+.badge-low{background:var(--red-dim);color:var(--red);border:1px solid rgba(248,81,73,.25);}
+.status-dot{width:7px;height:7px;border-radius:50%;background:currentColor;}
+
+/* Info grid */
+.info-grid{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:0;
+}
+.info-cell{
+  padding:18px 22px;
+  border-bottom:1px solid var(--border);
+  border-right:1px solid var(--border);
+  animation:fadeIn .4s ease both;
+}
+.info-cell:nth-child(even){border-right:none;}
+.info-cell:nth-last-child(-n+2){border-bottom:none;}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.info-cell:nth-child(1){animation-delay:.05s}
+.info-cell:nth-child(2){animation-delay:.10s}
+.info-cell:nth-child(3){animation-delay:.15s}
+.info-cell:nth-child(4){animation-delay:.20s}
+.info-cell:nth-child(5){animation-delay:.25s}
+.info-cell:nth-child(6){animation-delay:.30s}
+.info-cell:nth-child(7){animation-delay:.35s}
+.info-cell:nth-child(8){animation-delay:.40s}
+.info-label{
+  font-size:10px;font-weight:600;letter-spacing:1.2px;
+  color:var(--muted);text-transform:uppercase;
+  margin-bottom:5px;
+}
+.info-val{
+  font-size:14px;font-weight:600;color:#e6edf3;
+  line-height:1.3;
+}
+.info-val.mono{font-family:'JetBrains Mono',monospace;font-size:13px;}
+.info-val.date-ok{color:var(--green);}
+.info-val.date-exp{color:var(--red);}
+.info-val.date-soon{color:var(--yellow);}
+.info-val.stock-ok{color:var(--green);}
+.info-val.stock-low{color:var(--red);}
+
+/* Full-width cell */
+.info-cell.full{
+  grid-column:1/-1;
+  border-right:none;
+}
+
+/* Description block */
+.desc-block{
+  padding:20px 28px;
+  border-top:1px solid var(--border);
+  background:rgba(255,255,255,.02);
+}
+.desc-label{
+  font-size:10px;font-weight:700;letter-spacing:1.2px;
+  color:var(--muted);text-transform:uppercase;margin-bottom:8px;
+}
+.desc-text{
+  font-size:14px;line-height:1.65;color:#8b949e;
+}
+
+/* ── Days countdown card ── */
+.countdown-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:22px 24px;
+  margin-bottom:16px;
+  display:flex;align-items:center;gap:20px;
+  animation:slideUp .5s .1s cubic-bezier(.16,1,.3,1) both;
+  box-shadow:0 8px 24px rgba(0,0,0,.2);
+}
+.countdown-icon{
+  width:56px;height:56px;border-radius:14px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:26px;flex-shrink:0;
+}
+.countdown-icon.ok{background:var(--green-dim);}
+.countdown-icon.soon{background:var(--yellow-dim);}
+.countdown-icon.exp{background:var(--red-dim);}
+.countdown-label{font-size:12px;color:var(--muted);font-weight:500;margin-bottom:2px;}
+.countdown-val{font-size:22px;font-weight:800;line-height:1;}
+.countdown-val.ok{color:var(--green);}
+.countdown-val.soon{color:var(--yellow);}
+.countdown-val.exp{color:var(--red);}
+.countdown-sub{font-size:12px;color:var(--muted);margin-top:3px;}
+
+/* ── Pricing card ── */
+.price-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:16px;
+  overflow:hidden;
+  margin-bottom:16px;
+  animation:slideUp .5s .2s cubic-bezier(.16,1,.3,1) both;
+}
+.price-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 22px;border-bottom:1px solid var(--border);
+}
+.price-row:last-child{border-bottom:none;}
+.price-key{font-size:13px;color:var(--muted);font-weight:500;}
+.price-val{font-size:18px;font-weight:700;color:#e6edf3;}
+.price-val.green{color:var(--green);}
+.margin-badge{
+  background:rgba(63,185,80,.12);border:1px solid rgba(63,185,80,.2);
+  color:var(--green);font-size:11px;font-weight:700;
+  padding:3px 8px;border-radius:6px;
+}
+
+/* ── Footer ── */
+.footer{
+  text-align:center;margin-top:32px;
+  animation:fadeIn .5s .4s ease both;
+}
+.footer-brand{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:13px;color:var(--muted);margin-bottom:6px;
+}
+.footer-time{
+  font-size:11px;color:var(--ink3);
+  font-family:'JetBrains Mono',monospace;
+}
+
+/* ── Error state ── */
+.error-state{
+  text-align:center;padding:60px 20px;
+  animation:slideUp .4s ease both;
+}
+.error-icon{font-size:48px;margin-bottom:16px;}
+.error-title{font-size:20px;font-weight:700;color:#e6edf3;margin-bottom:8px;}
+.error-msg{font-size:14px;color:var(--muted);line-height:1.6;}
+
+/* Print */
+@media print{
+  body::before,.orb{display:none}
+  .hero,.countdown-card,.price-card{box-shadow:none;border-color:#ddd}
+  body{background:#fff;color:#000}
+}
+
+/* Mobile */
+@media(max-width:480px){
+  .info-grid{grid-template-columns:1fr}
+  .info-cell{border-right:none!important}
+  .info-cell:nth-last-child(-n+2){border-bottom:1px solid var(--border)}
+  .info-cell:last-child{border-bottom:none}
+  .med-name{font-size:22px}
+}
+</style>
+</head>
+<body>
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+
+<div class="wrapper">
+  <!-- Top bar -->
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-icon">
+        <svg width="20" height="20" viewBox="0 0 28 28" fill="none">
+          <path d="M14 4v20M4 14h20" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <span class="brand-name">mediQ</span>
+    </div>
+    <span class="brand-tag">MEDICINE INFO</span>
+  </div>
+
+  <!-- Content injected by JS -->
+  <div id="content"></div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div class="footer-brand">
+      <svg width="14" height="14" viewBox="0 0 28 28" fill="none">
+        <path d="M14 4v20M4 14h20" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>
+      mediQ Medical Inventory System
+    </div>
+    <div class="footer-time" id="scan-time"></div>
+  </div>
+</div>
+
+<script>
+// ── Parse QR data from URL ─────────────────────────────────────────────────
+const params = new URLSearchParams(window.location.search);
+const raw    = params.get('data');
+
+// Timestamp
+const now = new Date();
+document.getElementById('scan-time').textContent =
+  'Scanned: ' + now.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }) +
+  ' at ' + now.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
+
+function daysUntil(dateStr) {
+  const diff = (new Date(dateStr) - new Date()) / 86400000;
+  return Math.round(diff);
+}
+function isExpired(d)  { return new Date(d) < new Date(); }
+function isExpSoon(d)  { const days = daysUntil(d); return days >= 0 && days <= 90; }
+function fmtDate(d)    {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+}
+function fmtINR(n)     { return '₹' + Number(n).toLocaleString('en-IN', { maximumFractionDigits: 2, minimumFractionDigits: 2 }); }
+
+if (!raw) {
+  document.getElementById('content').innerHTML = `
+    <div class="error-state">
+      <div class="error-icon">📭</div>
+      <div class="error-title">No Medicine Data</div>
+      <div class="error-msg">This QR code does not contain valid medicine information.<br>Please scan a QR code generated by mediQ.</div>
+    </div>`;
+} else {
+  let med;
+  try { med = JSON.parse(decodeURIComponent(raw)); } catch {
+    document.getElementById('content').innerHTML = `
+      <div class="error-state">
+        <div class="error-icon">⚠️</div>
+        <div class="error-title">Invalid QR Data</div>
+        <div class="error-msg">Could not read the medicine information from this QR code.</div>
+      </div>`;
+    throw new Error('bad QR data');
+  }
+
+  const days    = daysUntil(med.expiryDate);
+  const expired = isExpired(med.expiryDate);
+  const expSoon = !expired && isExpSoon(med.expiryDate);
+  const isLow   = Number(med.quantity) <= Number(med.reorderLevel || 0);
+
+  // ── Status badges ──
+  let statusHTML = '';
+  if (expired) {
+    statusHTML += `<span class="status-badge badge-expired"><span class="status-dot"></span>EXPIRED</span>`;
+  } else if (expSoon) {
+    statusHTML += `<span class="status-badge badge-expiring"><span class="status-dot"></span>EXPIRING SOON</span>`;
+  } else {
+    statusHTML += `<span class="status-badge badge-ok"><span class="status-dot"></span>VALID</span>`;
+  }
+  if (isLow) {
+    statusHTML += `<span class="status-badge badge-low"><span class="status-dot"></span>LOW STOCK</span>`;
+  }
+
+  // ── Countdown ──
+  let cdClass, cdIcon, cdText;
+  if (expired) {
+    cdClass = 'exp'; cdIcon = '☠️';
+    cdText  = `Expired ${Math.abs(days)} day${Math.abs(days)!==1?'s':''} ago`;
+  } else if (expSoon) {
+    cdClass = 'soon'; cdIcon = '⏳';
+    cdText  = `${days} day${days!==1?'s':''} remaining`;
+  } else {
+    cdClass = 'ok'; cdIcon = '✅';
+    cdText  = `${days} day${days!==1?'s':''} remaining`;
+  }
+
+  // ── Pricing ──
+  const margin = med.sellingPrice && med.purchasePrice
+    ? (((med.sellingPrice - med.purchasePrice) / med.purchasePrice) * 100).toFixed(1)
+    : null;
+
+  // ── Description ──
+  const descBlock = med.description
+    ? `<div class="desc-block">
+        <div class="desc-label">Description / Usage</div>
+        <div class="desc-text">${med.description}</div>
+       </div>`
+    : '';
+
+  document.getElementById('content').innerHTML = `
+    <!-- Hero card -->
+    <div class="hero">
+      <div class="hero-head">
+        <div class="med-id">${med.id || '—'}</div>
+        <div class="med-name">${med.name || '—'}</div>
+        <div class="med-category">
+          <span class="cat-dot"></span>
+          ${med.category || '—'} &nbsp;·&nbsp; ${med.unit || ''}
+        </div>
+      </div>
+      <div class="status-row">${statusHTML}</div>
+      <div class="info-grid">
+        <div class="info-cell">
+          <div class="info-label">Manufacturer</div>
+          <div class="info-val">${med.manufacturer || '—'}</div>
+        </div>
+        <div class="info-cell">
+          <div class="info-label">Batch / Lot No.</div>
+          <div class="info-val mono">${med.batchNumber || '—'}</div>
+        </div>
+        <div class="info-cell">
+          <div class="info-label">Manufacture Date</div>
+          <div class="info-val">${fmtDate(med.manufactureDate)}</div>
+        </div>
+        <div class="info-cell">
+          <div class="info-label">Expiry Date</div>
+          <div class="info-val ${expired?'date-exp':expSoon?'date-soon':'date-ok'}">${fmtDate(med.expiryDate)}</div>
+        </div>
+        <div class="info-cell">
+          <div class="info-label">Current Stock</div>
+          <div class="info-val ${isLow?'stock-low':'stock-ok'}">${med.quantity} ${med.unit || ''}</div>
+        </div>
+        <div class="info-cell">
+          <div class="info-label">Reorder Level</div>
+          <div class="info-val">${med.reorderLevel || 0} ${med.unit || ''}</div>
+        </div>
+        ${med.supplier ? `
+        <div class="info-cell">
+          <div class="info-label">Supplier</div>
+          <div class="info-val">${med.supplier}</div>
+        </div>` : ''}
+        ${med.location ? `
+        <div class="info-cell">
+          <div class="info-label">Storage Location</div>
+          <div class="info-val mono">${med.location}</div>
+        </div>` : ''}
+        <div class="info-cell">
+          <div class="info-label">Registered On</div>
+          <div class="info-val">${fmtDate(med.registeredDate)}</div>
+        </div>
+      </div>
+      ${descBlock}
+    </div>
+
+    <!-- Countdown card -->
+    <div class="countdown-card">
+      <div class="countdown-icon ${cdClass}">${cdIcon}</div>
+      <div>
+        <div class="countdown-label">Expiry Status</div>
+        <div class="countdown-val ${cdClass}">${cdText}</div>
+        <div class="countdown-sub">Expiry: ${fmtDate(med.expiryDate)}</div>
+      </div>
+    </div>
+
+    <!-- Pricing card -->
+    ${(med.sellingPrice || med.purchasePrice) ? `
+    <div class="price-card">
+      <div class="price-row">
+        <span class="price-key">Purchase Price</span>
+        <span class="price-val">${fmtINR(med.purchasePrice || 0)}</span>
+      </div>
+      <div class="price-row">
+        <span class="price-key">Selling Price</span>
+        <span class="price-val green">${fmtINR(med.sellingPrice || 0)}</span>
+      </div>
+      ${margin ? `
+      <div class="price-row">
+        <span class="price-key">Profit Margin</span>
+        <span class="margin-badge">+${margin}%</span>
+      </div>` : ''}
+    </div>` : ''}
+  `;
+}
+</script>
+</body>
+</html>
